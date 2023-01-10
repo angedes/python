@@ -117,6 +117,77 @@ if __name__== '__main__':
     print('E = ', E)
 
 
+    # SVD triangulation
+
+    # But I need projection matrix for the triangularization and the transformation matrix to find it, how ?
+    # Prepare a matrix for storing the triangulated points, of the shape (3,429) che è la shape di x1_matches_SG, x2_matches_SG
+    
+    X_w_tri = np.ones(x1_w.shape)
+
+    for p in range(x1_matches_SG.shape[1]):
+        xi = x1[0, p]
+        yi = x1[1, p]
+        eq1 = [xi * P_1[2, 0] - P_1[0, 0], xi * P_1[2, 1] - P_1[0, 1], xi * P_1[2, 2] - P_1[0, 2],
+               xi * P_1[2, 3] - P_1[0, 3]]
+        eq2 = [yi * P_1[2, 0] - P_1[1, 0], yi * P_1[2, 1] - P_1[1, 1], yi * P_1[2, 2] - P_1[1, 2],
+               yi * P_1[2, 3] - P_1[1, 3]]
+
+        xi = x2[0, p]
+        yi = x2[1, p]
+        eq3 = [xi * P_2[2, 0] - P_2[0, 0], xi * P_2[2, 1] - P_2[0, 1], xi * P_2[2, 2] - P_2[0, 2],
+               xi * P_2[2, 3] - P_2[0, 3]]
+        eq4 = [yi * P_2[2, 0] - P_2[1, 0], yi * P_2[2, 1] - P_2[1, 1], yi * P_2[2, 2] - P_2[1, 2],
+               yi * P_2[2, 3] - P_2[1, 3]]
+
+        A = np.stack([eq1, eq2, eq3, eq4])
+
+        u, s, vh = np.linalg.svd(A)
+
+        p_3d = vh[3] / vh[3, 3]
+        X_w_tri[0, p] = p_3d[0]
+        X_w_tri[1, p] = p_3d[1]
+        X_w_tri[2, p] = p_3d[2]
+
+    # Plot ground truth next to triangulated 3d points
+    fig3D = plt.figure(1)
+
+    # Plot legend
+    ax = plt.axes(projection='3d', adjustable='box')
+    ax.set_title('Ground truth (blue) and triangulated points (red)')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+
+    # Plot cameras and world frames
+    drawRefSystem(ax, np.eye(4, 4), '-', 'W')
+    drawRefSystem(ax, T_w_c1, '-', 'C1')
+    drawRefSystem(ax, T_w_c2, '-', 'C2')
+
+    # Plot ground truth
+    drawRefSystem(ax, T_w_c1, '-', 'C1')
+    drawRefSystem(ax, T_w_c2, '-', 'C2')
+    ax.scatter(X_w[0, :], X_w[1, :], X_w[2, :], color='b', marker='.')
+    # Plot triangulated points
+    ax.scatter(X_w_tri[0, :], X_w_tri[1, :], X_w_tri[2, :], color='r', marker='.')
+    plt.show()
+
+    plt.close(1)
+
+    img1 = cv2.cvtColor(cv2.imread("new1.png"), cv2.COLOR_BGR2RGB)
+    img2 = cv2.cvtColor(cv2.imread("new2.png"), cv2.COLOR_BGR2RGB)
+
+
+    # Ora vorrei applicare SfM (in plotData.py) in cui vado a fare svd di E
+    # Structure from motion
+
+    X_tri_c1, T_c1_c1, T_c1_c2 = pld.SfM(E, K, K, x1_matches_SG, x2_matches_SG, plot=True, img1=new1.png, img2=new2.png)
+
+
+
+
+
+
+
 
 
     '''
