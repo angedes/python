@@ -110,15 +110,59 @@ if __name__== '__main__':
     plt.show()
 
 
+    # SVD triangulation for finding the 3D point from the matching 2D of the new images
+
+    # Prepare a matrix for storing the triangulated points, shape (4,429)
+    X_w_tri = np.ones(x1_matches.shape)
+
+    for p in range(x1_matches.shape[1]):
+        xi = x1[0, p]
+        yi = x1[1, p]
+        eq1 = [xi * P_1[2, 0] - P_1[0, 0], xi * P_1[2, 1] - P_1[0, 1], xi * P_1[2, 2] - P_1[0, 2],
+               xi * P_1[2, 3] - P_1[0, 3]]
+        eq2 = [yi * P_1[2, 0] - P_1[1, 0], yi * P_1[2, 1] - P_1[1, 1], yi * P_1[2, 2] - P_1[1, 2],
+               yi * P_1[2, 3] - P_1[1, 3]]
+
+        xi = x2[0, p]
+        yi = x2[1, p]
+        eq3 = [xi * P_2[2, 0] - P_2[0, 0], xi * P_2[2, 1] - P_2[0, 1], xi * P_2[2, 2] - P_2[0, 2],
+               xi * P_2[2, 3] - P_2[0, 3]]
+        eq4 = [yi * P_2[2, 0] - P_2[1, 0], yi * P_2[2, 1] - P_2[1, 1], yi * P_2[2, 2] - P_2[1, 2],
+               yi * P_2[2, 3] - P_2[1, 3]]
+
+        A = np.stack([eq1, eq2, eq3, eq4])
+
+        u, s, vh = np.linalg.svd(A)
+
+        p_3d = vh[3] / vh[3, 3]
+        X_w_tri[0, p] = p_3d[0]
+        X_w_tri[1, p] = p_3d[1]
+        X_w_tri[2, p] = p_3d[2]
+
+    # Plot ground truth next to triangulated 3d points
+    fig3D = plt.figure(1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    '''
     F = fRANSAC.fRANSAC_superglue()
     E = K.T @ F @ K
     print('E = ', E)
+    '''
 
-    best_tri, T_1, best_T = pld.SfM(E, K, K, x1_matches_SG, x2_matches_SG, plot=True, img1='new1.png', img2='new2.png')
+    #best_tri, T_1, best_T = pld.SfM(E, K, K, x1_matches_SG, x2_matches_SG, plot=True, img1='new1.png', img2='new2.png')
     # P = KC @ best_T
-
-
-
 
     '''
     
@@ -143,16 +187,3 @@ if __name__== '__main__':
     R = Rt.transpose()
     
     '''
-
-
-
-
-
-
-
-
-
-
-
-    best_tri, T_1, best_T = pld.SfM(E,K,K,x1_matches_SG,x2_matches_SG,plot=True,img1 = 'new1.png',img2 ='new2.png')
-    #P = KC @ best_T
