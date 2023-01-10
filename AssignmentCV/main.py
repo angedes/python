@@ -110,73 +110,24 @@ if __name__== '__main__':
     plt.show()
 
 
-    # SVD triangulation for finding the 3D point from the matching 2D of the new images
+    F = fRANSAC.fRANSAC_superglue()
+    print('F = ', F)
 
-    # Prepare a matrix for storing the triangulated points, shape (4,429)
-    X_w_tri = np.ones(x1_matches.shape)
-
-    for p in range(x1_matches.shape[1]):
-        xi = x1[0, p]
-        yi = x1[1, p]
-        eq1 = [xi * P_1[2, 0] - P_1[0, 0], xi * P_1[2, 1] - P_1[0, 1], xi * P_1[2, 2] - P_1[0, 2],
-               xi * P_1[2, 3] - P_1[0, 3]]
-        eq2 = [yi * P_1[2, 0] - P_1[1, 0], yi * P_1[2, 1] - P_1[1, 1], yi * P_1[2, 2] - P_1[1, 2],
-               yi * P_1[2, 3] - P_1[1, 3]]
-
-        xi = x2[0, p]
-        yi = x2[1, p]
-        eq3 = [xi * P_2[2, 0] - P_2[0, 0], xi * P_2[2, 1] - P_2[0, 1], xi * P_2[2, 2] - P_2[0, 2],
-               xi * P_2[2, 3] - P_2[0, 3]]
-        eq4 = [yi * P_2[2, 0] - P_2[1, 0], yi * P_2[2, 1] - P_2[1, 1], yi * P_2[2, 2] - P_2[1, 2],
-               yi * P_2[2, 3] - P_2[1, 3]]
-
-        A = np.stack([eq1, eq2, eq3, eq4])
-
-        u, s, vh = np.linalg.svd(A)
-
-        p_3d = vh[3] / vh[3, 3]
-        X_w_tri[0, p] = p_3d[0]
-        X_w_tri[1, p] = p_3d[1]
-        X_w_tri[2, p] = p_3d[2]
-
-    # Plot ground truth next to triangulated 3d points
-    fig3D = plt.figure(1)
-
-
-
-
-
-
-
-
-
-
+    E = pld.getEfromF(F,K,K)
+    print('E = ', E)
 
 
 
 
     '''
+
     F = fRANSAC.fRANSAC_superglue()
     E = K.T @ F @ K
     print('E = ', E)
-    '''
-
-    #best_tri, T_1, best_T = pld.SfM(E, K, K, x1_matches_SG, x2_matches_SG, plot=True, img1='new1.png', img2='new2.png')
-    # P = KC @ best_T
-
-    '''
-    
-    F = fRANSAC.fRANSAC_superglue()
-    E = K.T @ F @ K
-    print('E = ', E)
-    
     FROM HERE:
-    
     # svd on E: to get U W V -> R,t are there (up to a sign) (see the link I sent you!)
     # find the combination that has most of points with depth > 0 (see the link I sent you!)
-
-    # find correspondances of picture1 and old image -> need to go greyscale now! Do it same as you found between picture1 
-    and picture2
+    #find correspondances of picture1 and old image -> need to go greyscale now! Do it same as you found between picture1 and picture2
 
     imagePoints = # points in old image
     objectPoints = # I will give code how to get from points in picture1 and intriniscs to 3d world coord (can look up on the internet)
@@ -186,4 +137,19 @@ if __name__== '__main__':
     Rt = cv2.Rodrigues(rvec)
     R = Rt.transpose()
     
-    '''
+    
+    
+    
+    La tua lista di robe direi che vada bene, allora prendi solo le immagini "nuove", poi con l'esercizio 2 (direi) ti ricavi 
+    l'intrinsics della tua camera, onestamente non so come se faccia. Poi con l'esercizio 3 ti ricavi la fundamental matrix. 
+    Avendo K e F ti puoi ricavare l'essential matrix (dopo guardo come si fa, ma è semplice, devi risolvere un sistema). 
+    Dalla matrix E puoi ricavarti le extrinsics delle tue immagini (una di queste sarà quella "reference", quindi sarà un'identità).
+     Poi trovi le correspondances tra le tue immagini e l'immagine antica. Avendo tutte le K e R,t puoi ricavarti i punti in 3D dei
+      punti matchati tra le tue immagini e quella antica. Avendo punti in 3D e le corrispondenti punti in 2D nel tuo image plane 
+      della imagine antica, puoi ricavarti intrinsics ed extrinsics della tua camera antica. Gli extrinsics sono la location della 
+      tua camera antica rispetto alla camera dell'immagine che hai preso come reference. La reference la prendi perché quando 
+      ottieni la tua essential tra camera1 e camera2, in realtà tu ottieni la trasformazione tra reference camera1 e reference 
+      camera2, però se setti implicitamente il world reference frame al reference camera2, ottieni la trasformazione camera1 to 
+      world (cioè extrinsics), e la trasformazione camera2 to world si riduce ad un'identità.
+      
+      '''
