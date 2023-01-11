@@ -1,11 +1,7 @@
 import numpy as np
-import cv2
+import cv2 as cv
 import matplotlib.pyplot as plt
 import plotData as pld
-import fRANSAC
-import hRANSAC
-import lineRANSAC
-
 
 from skimage.feature import match_descriptors
 from skimage.measure import ransac
@@ -36,15 +32,16 @@ def main():
     print("Matches confidence : ", matches_SG_confidence)
 
 
+
+
 if __name__== '__main__':
 
     main()
 
-
-    img1 = cv2.cvtColor(cv2.imread("new1.png"), cv2.COLOR_BGR2RGB)
-    img2 = cv2.cvtColor(cv2.imread("new2.png"), cv2.COLOR_BGR2RGB)
-    new1 = cv2.resize(img1, dsize=(640, 480))
-    new2 = cv2.resize(img2, dsize=(640, 480))
+    img1 = cv.cvtColor(cv.imread("new1.png"), cv.COLOR_BGR2RGB)
+    img2 = cv.cvtColor(cv.imread("new2.png"), cv.COLOR_BGR2RGB)
+    new1 = cv.resize(img1, dsize=(640, 480))
+    new2 = cv.resize(img2, dsize=(640, 480))
 
     K = np.loadtxt('K_MyCamera.txt')
     I_3_4 = np.array([
@@ -110,18 +107,116 @@ if __name__== '__main__':
     plt.show()
 
 
+    def run_sfm(K0, K1, img1, img2 , X=None, Y=None, Z=None):
+
+        R_t_0 = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]])
+        R_t_1 = np.empty((3, 4))
+        P1 = np.matmul(K0, R_t_0)
+        P2 = np.empty((3, 4))
+        X = np.array([]) if X is None else X
+        Y = np.array([]) if Y is None else Y
+        Z = np.array([]) if Z is None else Z
+
+        sift = cv.SIFT_create()
+        kp0, desc0 = sift.detectAndCompute(img1, None)
+        kp1, desc1 = sift.detectAndCompute(img2, None)
+
+        FLANN_INDEX_KDTREE = 1
+        index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+        search_params = dict(checks=100)
+        flann = cv.FlannBasedMatcher(index_params, search_params)
+        matches = flann.knnMatch(desc0,desc1,k=2)
+
+        good = []
+        pts1 = []
+        pts2 = []
+
+        # Lowe's paper
+
+        for i, (m, n) in enumerate(matches):
+            if m.distance < 0.7 * n.distance:
+                good.append(m)
+                pts1.append(kp0[m.queryIdx].pt)
+                pts2.append(kp1[m.trainIdx].pt)
+
+        pts1 = np.array(pts1)
+        pts2 = np.array(pts2)
+        F, mask = cv.findFundamentalMat(pts1, pts2, cv.FM_RANSAC)
+
+        # prendi inlier points
+        pts1 = pts1[mask.ravel() == 1]
+        pts2 = pts2[mask.ravel() == 1]
+
+        # operazione standard
+        # da te K1 == K0, ma non mi ricordo se siano corrette come le ho messe
+        E = np.matmul(np.matmul(np.transpose(K1), F), K0)
+        retval, R, t, mask = cv.recoverPose(E, pts1, pts2, K1)
+
+        R_t_1[:3, :3] = np.matmul(R, R_t_0[:3, :3])
+        R_t_1[:3, 3] = R_t_0[:3, 3] + np.matmul(R_t_0[:3, :3], t.ravel())
+
+        # dovrebbe essere un'identita' la R_t_0
+
+        print("R_t_0 \n" + str(R_t_0))
+        print("R_t_1 \n" + str(R_t_1))
+
+        P2 = np.matmul(K1, R_t_1)
+
+        print("The projection matrix P1 \n" + str(P1))
+        print("The projection matrix P2 \n" + str(P2))
+
+        pts1 = np.transpose(pts1)
+        pts2 = np.transpose(pts2)
+
+        points_3d = cv.triangulatePoints(P1, P2, pts1, pts2)
+        points_3d /= points_3d[3]
+
+        X = np.concatenate((X, points_3d[0]))
+        Y = np.concatenate((Y, points_3d[1]))
+        Z = np.concatenate((Z, points_3d[2]))
+
+        print("X 3D = ", X)
+        print("Y 3D = ", Y)
+        print("Z 3D = ", Z)
+
+
+    # La funzione mi sputa fuori le matrici di rotazione, di proiezione e i punti triangolarizzati in 3D
+
+    X = run_sfm(K, K, img1 , img2, X=None, Y=None, Z=None )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''
     F = fRANSAC.fRANSAC_superglue()
     print('F = ', F)
-
     E = pld.getEfromF(F,K,K)
     print('E = ', E)
 
-
     # SVD triangulation
 
-    # But I need projection matrix for the triangularization and the transformation matrix to find it, how ?
-    # Prepare a matrix for storing the triangulated points, of the shape (3,429) che è la shape di x1_matches_SG, x2_matches_SG
-    
+    # But I need projection matrix for the triangularization
+    # Prepare a matrix for storing the triangulated points, shape (4,103)
     X_w_tri = np.ones(x1_w.shape)
 
     for p in range(x1_matches_SG.shape[1]):
@@ -182,16 +277,6 @@ if __name__== '__main__':
 
     X_tri_c1, T_c1_c1, T_c1_c2 = pld.SfM(E, K, K, x1_matches_SG, x2_matches_SG, plot=True, img1=new1.png, img2=new2.png)
 
-
-
-
-
-
-
-
-
-    '''
-
     F = fRANSAC.fRANSAC_superglue()
     E = K.T @ F @ K
     print('E = ', E)
@@ -207,8 +292,6 @@ if __name__== '__main__':
     _, rVec, tVec = cv2.solvePnP(objectPoints, imagePoints, cameraMatrix, distCoeffs)
     Rt = cv2.Rodrigues(rvec)
     R = Rt.transpose()
-    
-    
     
     
     La tua lista di robe direi che vada bene, allora prendi solo le immagini "nuove", poi con l'esercizio 2 (direi) ti ricavi 
