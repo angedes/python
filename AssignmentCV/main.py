@@ -71,7 +71,7 @@ def run_sfm(K1, K2, img1, img2, X=None, Y=None, Z=None):
 
     points_3d = cv.triangulatePoints(P1, P2, pts1, pts2)
     points_3d /= points_3d[3]
-    print('points_3d = ', points_3d)
+    print('Points 3d with SIFT = ', points_3d)
 
     X = np.concatenate((X, points_3d[0]))
     Y = np.concatenate((Y, points_3d[1]))
@@ -101,11 +101,11 @@ def calc_rep_error(P1, P2, K, R_t_1, R_t_2, imagePoint1, imagePoint2):
     point3D = cv.triangulatePoints(P1, P2, imagePoint1, imagePoint2).T
     #print('points 3D =', point3D)
     point3D = point3D[:, :3] / point3D[:, 3:4]
-    print('points 3D =', point3D)
+    print('Points 3D with Superglue = ', point3D)
 
     # We can filter 3D points based on if the z component it is negative and so we selected only with z > 0
-    point3D = point3D[point3D[:, 2] > 0,:]
-    print('points 3D filtered =', point3D)
+    #point3D = point3D[point3D[:, 2] > 0,:]
+    #print('points 3D with Superglue filtered =', point3D)
 
     # Reproject back into the two cameras
     R1, t1 = R_t_1[:, :3], R_t_1[:, 3]
@@ -132,7 +132,10 @@ def calc_rep_error(P1, P2, K, R_t_1, R_t_2, imagePoint1, imagePoint2):
     reprojection_error1 = np.linalg.norm(imagePoint1 - p1[:,0,:].T, axis = 0)
     reprojection_error2 = np.linalg.norm(imagePoint2 - p2[:,0,:].T, axis = 0)
 
-    print(reprojection_error1, reprojection_error2)
+    print('reprojection_error1 = ', reprojection_error1)
+    print('reprojection_error2 = ', reprojection_error2)
+
+    # It is important to have the reprojection error that is low
 
 
 
@@ -223,7 +226,8 @@ if __name__== '__main__':
     R_t_1, R_t_2, P1, P2, X, Y, Z , points_3d = run_sfm(K, K, img1 , img2, X=None, Y=None, Z=None )
 
 
-    #w = calc_rep_error(P1, P2, K, R_t_1, R_t_2, x1_matches_SG, x2_matches_SG)
+    w = calc_rep_error(P1, P2, K, R_t_1, R_t_2, x1_matches_SG, x2_matches_SG)
+
 
 
 
