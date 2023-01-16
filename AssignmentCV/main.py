@@ -221,6 +221,7 @@ if __name__== '__main__':
     plt.show()
 
 
+
     # La funzione mi sputa fuori le matrici di rotazione, di proiezione e i punti triangolarizzati in 3D
 
     R_t_1, R_t_2, P1, P2, X, Y, Z , points_3d = run_sfm(K, K, img1 , img2, X=None, Y=None, Z=None )
@@ -231,32 +232,7 @@ if __name__== '__main__':
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    '''
-    # matching between new2 and the old images
+    # matching between new2(called here as new) and the old image
 
     match_data_34 = np.load("new_old_matches.npz")
 
@@ -296,7 +272,7 @@ if __name__== '__main__':
     j = 0
 
     print('matches_SG_34.shape=', matches_SG_34.shape)
-    print('len_matches = : ', len_matches)
+    print('len_matches_34 = : ', len_matches_34)
 
     for i in range(len(matches_SG_34)):
         if matches_SG_34[i] != -1:
@@ -326,43 +302,7 @@ if __name__== '__main__':
     ax.set_title('Old picture')
     plt.show()
 
-    '''
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
 
 
 
