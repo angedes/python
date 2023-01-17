@@ -311,14 +311,28 @@ if __name__== '__main__':
 
 
 
-    Y = matches_SG[matches_SG != -1]
-    print('Matches_SG_filtered = ', Y)
-    print('Matches_SG_filtered.shape = ', Y.shape)
+    # plot of point3D from Superglue
 
-    Z = matches_SG_34[matches_SG_34 != -1]
-    print('Matches_34_SG_filtered = ', Z)
-    print('Matches_34_SG_filtered.shape = ', Z.shape)
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d', adjustable = 'box')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    ax.scatter(point3D[:, 0], point3D[:,1], point3D[:, 2])
+    ax.scatter(point3D[:, 0], point3D[:, 1], point3D[:, 2])
+    plt.show()
 
+
+    # plot of point3D from Sift
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d', adjustable='box')
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    ax.scatter(points_3d[0], points_3d[1], points_3d[2])
+    ax.scatter(points_3d[ 0], points_3d[ 1], points_3d[ 2])
+    plt.show()
 
 
 
