@@ -125,6 +125,22 @@ if __name__ == '__main__':
     points3d = triangulate(K, K, M1, M2, pts1, pts2)
     #print('points3d.shape = ', points3d.shape)
 
+    
+    # 2d-2d img4(=img1)-old I have only changed the name
+    img4 = cv2.cvtColor(cv2.imread('new.png'), cv2.COLOR_BGR2RGB)
+    imgOld = cv2.cvtColor(cv2.imread('old.png'), cv2.COLOR_BGR2RGB)
+
+    pts4, ptsOld = get_correspondances2(img4.copy(), imgOld.copy())
+
+    
+    
+    
+    
+    
+    
+    
+    
+       
 
     # with Superglue
 
